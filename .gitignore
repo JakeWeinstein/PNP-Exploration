@@ -5,3 +5,10 @@ FireDrakeEnvCG/petsc/
 .DS_Store
 
 FireDrakeEnvCG/firedrake-configure
+
+*.aux
+*.fdb_latexmk
+*.files
+*.log
+*.out
+*.synctex.gc
