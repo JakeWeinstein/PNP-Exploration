@@ -1,2 +1,5 @@
-/FireDrakeEnvCG/petsc
+# Ignore the petsc folder inside FireDrakeENVCG
+FireDrakeEnvCG/petsc/
+
+# Ignore macOS metadata files everywhere
 .DS_Store
