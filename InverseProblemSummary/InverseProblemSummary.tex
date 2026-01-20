@@ -1,0 +1,200 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[all]{xy}
+
+\usepackage[colorlinks=true, urlcolor=blue, linkcolor=blue, citecolor=blue]{hyperref}
+
+\usepackage{amsmath,amsthm,amssymb,color,latexsym,esint}
+\newcommand{\justif}[2]{&{#1}&\text{#2}}
+\newcommand{\nat}{\mathsf{nat}}
+\usepackage{mathtools}
+\usepackage{geometry}
+\usepackage{tabularray}
+\usepackage{proof}
+\usepackage{mathpartir}
+\UseTblrLibrary{amsmath}
+\geometry{letterpaper}
+\usepackage{graphicx}
+\usepackage{tabto}
+\usepackage{tikz}
+\usetikzlibrary{automata, arrows.meta, positioning}
+\usepackage{bm}
+\usetikzlibrary{automata}
+\usepackage{setspace}
+\usepackage[shortlabels]{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,decorations.pathreplacing}
+
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}%
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}%
+\setlength{\parindent}{0pt}
+\makeatletter
+\let\oldabs\abs
+\def\abs{\@ifstar{\oldabs}{\oldabs*}}
+%
+\let\oldnorm\norm
+\def\norm{\@ifstar{\oldnorm}{\oldnorm*}}
+\makeatother
+
+
+\usepackage{xparse}% http://ctan.org/pkg/xparse
+\NewDocumentCommand{\ceil}{s O{} m}{%
+  \IfBooleanTF{#1} % starred
+    {\left\lceil#3\right\rceil} % \ceil*[..]{..}
+    {#2\lceil#3#2\rceil} % \ceil[..]{..}
+}
+
+\usepackage[noframe]{showframe}
+\usepackage{framed}
+
+% Sets up "environments" of formatted text.
+\renewenvironment{shaded}{%
+  \def\FrameCommand{\fboxsep=\FrameSep \colorbox{shadecolor}}%
+  \MakeFramed{\advance\hsize-\width \FrameRestore\FrameRestore}}%
+ {\endMakeFramed}
+\definecolor{shadecolor}{gray}{0.90}
+
+\newtheorem{problem}{Problem}
+
+\newenvironment{solution}[1][\textit{Solution:}]{\textbf{#1 } }
+
+% Sets spacing for the document
+\onehalfspacing
+
+\begin{document}
+\section*{A brief summary of inverse problems}
+We're trying to infer the parameters of some PDE system from observations of its outcomes.
+
+Formally we can let the paramerters be a vector $\mathbf{m} \in \mathbb{R}^p$ and the data be a vector $\mathbf{d} \in \mathbb{R}^n$. Then we're trying to solve the following optimization problem or a similar one
+
+\begin{equation}
+    \arg \min_{\bm{m}} \Phi(\bm{m}) = \frac{1}{2}||\bm{f(m)-d}||^2+\frac{\beta}{2}||\bm{m}||^2_{\textbf{H}^{\text{reg}}}
+\end{equation}
+
+Where $\bm{f(m)}$ is the forward solution to the PDE with parameter $\bm{m}$, $\bm{d}$ is the observed outcome, and $\textbf{H}^{\text{reg}}$ is a regularization norm that prescribes some nice properties of $\bm{m}$, maybe smoothness, maybe something else desireable. The first term is just how well the forward solution with the parameter we found matches the data, and the second term is a regularization penalty.
+\vspace{1em}
+\hrule
+\vspace{1em}
+Generally inverse problems are ill-posed because there are often many different parameters that will give the same output to the PDE. An intuitive example is 1D heat distribution. If our data is a flat heat profile, there are infinitely many initial heat distributions that will result in a flat heat distribution eventually.
+\\Regularization lets us refine to try to pick which of those solutions we want our solver to prefer.
+\vspace{1em}
+\hrule
+\vspace{1em}
+\paragraph{Solving with Newton-CG}\quad
+\\ We start with a guess $\bm{m}_0$. Ultimately we want to make the following update to $\bm{m_0}$, so that our new $\bm{m}$ reduces $\bm{\Phi(m)}$.
+
+\begin{equation}
+    \bm{m}_{k+1} = \bm{m}_k+\alpha_k \bm{p}_k
+\end{equation}
+But we first need to find the right search direction $\bm{p}_k$ that will affect $\bm{m}_k$ in the right way. We do this by solving the system
+
+\begin{equation}
+    \textbf{H}_k \bm{p}_k = -\bm{g}_k
+\end{equation}
+Where $\bm{g}_k$ is the gradient of $\Phi(\bm{m}_k)$ and $\textbf{H}_k$ is the Hessian of $\Phi(\bm{m}_k)$. This is difficult because $\textbf{H}_k$ is very large and dense, and for a lot of problems it is completely intractable to formulate it explicitly. Instead we use the conjugate gradient method to get away with only needing to compute the Hessians effect on an arbitrary vector, which we can compute with a forward/adjoint pair solve, rather than the full Hessian.
+\\\paragraph{What is the expensive part?}\quad \\
+The main expensive parts of this are solving the $\textbf{H}_k \bm{p}_k = -\bm{g}_k$ system with CG, which requires multiple Hessian-vector products, and performing the linetrace to find an appropriate step size $\alpha_k$. Each Hessian-vector product and each evaluation of $\Phi(\bm{m})$ during the linetrace requires solving the forward PDE.
+\begin{center}
+    \resizebox{300pt}{!}{
+        \includegraphics{NumberOfForwardSolvesExample.png}
+    }
+\end{center}
+Above is one of the sample problems given in the paper. The "\#Stokes" column is the number of forward solves required to solve the inverse problem for the different scales of this problem they tried. I don't yet have a sense of the scale of the problems we're trying to solve, but needing on the order of thousands of forward solves seems like a reasonable assumption of this method.
+
+\vspace{1em}
+\hrule
+\vspace{1em}
+
+\section*{Deciding which inverse problems we're interested in.}
+
+\paragraph{The "generic" inverse problem}\quad\\
+Given
+\begin{equation}
+    c_i(\bm{x},T_f), \phi(\bm{x},T_f)
+\end{equation}
+infer
+\begin{equation}
+    c_i(\bm{x},0), \phi(\bm{x},0), D_i, \eta,...
+\end{equation}
+
+This is probably very hard and (almost) definitely very ill-conditioned. Could be possible, I think I could try to begin to explore a version of this using a simpler poisson forward solver, maybe the partial one in the github.
+
+\vspace{1em}
+\hrule
+\vspace{1em}
+
+I'd like to know a bit more about the applications. If the goal is to create a desired $c_i(\bm{x},T_f), \phi(\bm{x},T_f)$, and we have some mechanisms for controlling the system, then an inverse problem with the constraints as the control mechanism might have a better shot and not being quite so ill-conditioned.
+
+The control mechanism would be application specific, so I'd like to learn more about the applications, but an example one might be 
+
+\begin{align}
+c_i(\mathbf{x},0) &= 0, && \mathbf{x}\in\Omega,\\
+\left.\frac{\partial c_i}{\partial t}\right|_{\mathbf{x}=\mathbf{\Pi}_j} &= f(t),
+&& j=1,2,\dots,\\
+f(t) &=
+\begin{cases}
+r, & t < T_{\mathrm{inj}},\\
+0, & \text{otherwise}. 
+\end{cases}
+&& 0 < T_{\mathrm{inj}} \leq T_f
+\end{align}
+
+% In your preamble:
+\begin{center}
+    \begin{tikzpicture}[
+  font=\small,
+  >=Latex,
+  inj/.style={-Latex, line width=0.6pt},
+  box/.style={draw, line width=0.9pt},
+  gridline/.style={draw=blue!25, line width=0.3pt}
+]
+
+% --- domain rectangle
+\coordinate (A) at (0,0);
+\coordinate (B) at (12,0);
+\coordinate (C) at (12,4);
+\coordinate (D) at (0,4);
+\draw[box] (A) rectangle (C);
+
+% --- labels on/near the top edge
+\node[above] at ($(D)!0.15!(C)$) {$\partial\Omega$};
+
+% "c_i injection points" text centered above the arrows
+\node[above] at ($(D)!0.55!(C) + (0,0.45)$) {$c_i$ injection points};
+
+% T_j label above right
+\node[above] at ($(D)!0.80!(C) + (0,0.45)$) {$\mathbf{\Pi}_j$};
+
+% --- downward injection arrows at discrete points on the top boundary
+% Choose x-positions along the top edge to resemble your sketch
+\foreach \x in {4.7,5.3,6.0,6.8,7.6}{
+  \draw[inj] (\x,4.55) -- (\x,4.05);
+}
+
+% --- ellipsis and dashes on the top edge to the right (as in the sketch)
+\node at (8.3,4.35) {$\cdots$};
+% \node at (9.3,4.35) {$-$};
+% \node at (10.1,4.35) {$-$};
+
+
+\end{tikzpicture}
+
+\end{center}
+
+This is a setup where you start with initially no $c_i$ and then you inject $c_i$ at a set of points $\mathbf{\Pi}_j$ on the boundary for some time $T_{\mathrm{inj}}$. The inverse problem is then to find the injection rate $r$ and injection time $T_{\mathrm{inj}}$ such that at final time $T_f$ the concentration and potential match some desired profile. This could be useful as it might allow you achieve an arbitrary desired concentration profile by controlling the injection rate and time. This would likely be much less ill-conditioned as the control mechanism limits the space of possible solutions.
+
+Depending on the application, a setup like this would definitely make the problem much more tractable. 
+
+\vspace{1em}
+\hrule
+\vspace{1em}
+
+According to \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC3122111/} which was linked in the github, ``there are very limited experimental data of diffusion coefficients available for biomolecular systems, such as ion channels, nanopores, and microchannels.'' So perhaps creating a good computational setup to infer $D_i$ from experimental data would be a useful inverse problem to solve.
+
+\vspace{1em}
+\hrule
+\vspace{1em}
+
+I may explore using firedrake to create a Newton-CG solver. I can't seem to find any existing implementations of Newton-CG with the firedrake framework.
+
+\end{document}
