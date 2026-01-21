@@ -44,8 +44,11 @@
     {#2\lceil#3#2\rceil} % \ceil[..]{..}
 }
 
+
 \usepackage[noframe]{showframe}
 \usepackage{framed}
+
+
 
 % Sets up "environments" of formatted text.
 \renewenvironment{shaded}{%
@@ -62,7 +65,12 @@
 \onehalfspacing
 
 \begin{document}
-\section*{A brief summary of inverse problems}
+
+
+\section*{Inverse Problems and Model Reduction}
+\textit{A brief summary of \href{https://www.cambridge.org/core/journals/acta-numerica/article/learning-physicsbased-models-from-data-perspectives-from-inverse-problems-and-model-reduction/C072A4B417F8C3873ED75C1D63BBB31D}{Learning physics-based models from data: perspectives from inverse problems and model reduction}}
+
+\paragraph{What is an inverse problem?}\quad \\
 We're trying to infer the parameters of some PDE system from observations of its outcomes.
 
 Formally we can let the paramerters be a vector $\mathbf{m} \in \mathbb{R}^p$ and the data be a vector $\mathbf{d} \in \mathbb{R}^n$. Then we're trying to solve the following optimization problem or a similar one
@@ -79,14 +87,14 @@ Generally inverse problems are ill-posed because there are often many different 
 \\Regularization lets us refine to try to pick which of those solutions we want our solver to prefer.
 \vspace{1em}
 \hrule
-\vspace{1em}
+
 \paragraph{Solving with Newton-CG}\quad
 \\ We start with a guess $\bm{m}_0$. Ultimately we want to make the following update to $\bm{m_0}$, so that our new $\bm{m}$ reduces $\bm{\Phi(m)}$.
 
 \begin{equation}
     \bm{m}_{k+1} = \bm{m}_k+\alpha_k \bm{p}_k
 \end{equation}
-But we first need to find the right search direction $\bm{p}_k$ that will affect $\bm{m}_k$ in the right way. We do this by solving the system
+But we first need to find the right search direction $\bm{p}_k$ that will affect $\bm{m}_k$ in the right way. We do this by solving the system \footnote{Technically we want to solve this system inaccurately to not overfit and there are a few other details I'm skipping in this summary, but this is the gist.}
 
 \begin{equation}
     \textbf{H}_k \bm{p}_k = -\bm{g}_k
@@ -107,7 +115,7 @@ Above is one of the sample problems given in the paper. The "\#Stokes" column is
 
 \section*{Deciding which inverse problems we're interested in.}
 
-\paragraph{The "generic" inverse problem}\quad\\
+\paragraph{The ``generic'' inverse problem}\quad\\
 Given
 \begin{equation}
     c_i(\bm{x},T_f), \phi(\bm{x},T_f)
@@ -123,7 +131,7 @@ This is probably very hard and (almost) definitely very ill-conditioned. Could b
 \hrule
 \vspace{1em}
 
-I'd like to know a bit more about the applications. If the goal is to create a desired $c_i(\bm{x},T_f), \phi(\bm{x},T_f)$, and we have some mechanisms for controlling the system, then an inverse problem with the constraints as the control mechanism might have a better shot and not being quite so ill-conditioned.
+I'd like to know a bit more about the applications. If the goal is to create a desired $c_i(\bm{x},T_f), \phi(\bm{x},T_f)$, and we have some mechanisms for controlling the system, then an inverse problem with the control mechanism as the constraints might have a better shot and not being quite so ill-conditioned.
 
 The control mechanism would be application specific, so I'd like to learn more about the applications, but an example one might be 
 
@@ -131,9 +139,9 @@ The control mechanism would be application specific, so I'd like to learn more a
 c_i(\mathbf{x},0) &= 0, && \mathbf{x}\in\Omega,\\
 \left.\frac{\partial c_i}{\partial t}\right|_{\mathbf{x}=\mathbf{\Pi}_j} &= f(t),
 && j=1,2,\dots,\\
-f(t) &=
+f_j(t) &=
 \begin{cases}
-r, & t < T_{\mathrm{inj}},\\
+r_j, & t < T_{\mathrm{inj}}^{(j)},\\
 0, & \text{otherwise}. 
 \end{cases}
 && 0 < T_{\mathrm{inj}} \leq T_f
@@ -181,7 +189,7 @@ r, & t < T_{\mathrm{inj}},\\
 
 \end{center}
 
-This is a setup where you start with initially no $c_i$ and then you inject $c_i$ at a set of points $\mathbf{\Pi}_j$ on the boundary for some time $T_{\mathrm{inj}}$. The inverse problem is then to find the injection rate $r$ and injection time $T_{\mathrm{inj}}$ such that at final time $T_f$ the concentration and potential match some desired profile. This could be useful as it might allow you achieve an arbitrary desired concentration profile by controlling the injection rate and time. This would likely be much less ill-conditioned as the control mechanism limits the space of possible solutions.
+This is a setup where you start with initially no $c_i$ and then you inject $c_i$ at a set of points $\mathbf{\Pi}_j$ on the boundary for some time $T_{\mathrm{inj}}^{(j)}$. The inverse problem is then to find the injection rates $r_j$ and injection times $T_{\mathrm{inj}}^{(j)}$ such that at final time $T_f$ the concentration and potential match some desired profile. This could be useful as it might allow you achieve an arbitrary desired concentration profile by controlling the injection rate and time. This would likely be much less ill-conditioned as the control mechanism limits the space of possible solutions.
 
 Depending on the application, a setup like this would definitely make the problem much more tractable. 
 
@@ -193,8 +201,45 @@ According to \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC3122111/} which was l
 
 \vspace{1em}
 \hrule
+
+\paragraph{The OED (Optimal Experimental Design) problem}\quad \\
+
+The paper also has a section about Optimal Experiemental design, ie. can we infer how best to collect data? Where should we put the sensors in our experiment etc. They note that ``the OED problem is still several orders of magnitude more expensive than the inverse problem, which in turn is several orders of magnitude more expensive
+than the forward problem,'' and ``OED for large-scale
+inverse problems governed by PDE forward models with large numbers of design
+variables remained out of reach. In the last several years, a number of advances
+have made the solution of such OED problems tractable, at least for simpler PDE
+systems,'' this doesn't seem promising for our non-simple PDE forward model.
+
+\vspace{1em}
+\hrule
+
+\paragraph{Non-linear model reduction} \quad \\
+
+The paper has a large section on model reduction.
+To my understanding, this is not very helpful for our problem. The intention is to take a system like 
+\begin{equation}
+    \frac{\partial \bm{u}}{\partial t} = \mathcal{F}(\bm{u})
+\end{equation}
+Where $\bm{u} \in \mathbb{R}^N$ is very high dimensional, and $\mathcal{F}:\mathbb{R}^N \to \mathbb{R}^N$ is very expensive to evaluate.
+
+And create a reduced order model for $\mathcal{F}$ that is cheaper to evaluate. Basically it tries to reduce away the high dimensionality of $\bm{u}$ by only selectively evaluating the most important equations of $\mathcal{F}$, but in our case, 
+
+\begin{equation}
+  \nabla \cdot \left( D_i \left[ \nabla c_i + \frac{z_i F}{RT}\, c_i\, \nabla \phi \right] \right),
+\end{equation}
+
+\begin{equation}
+  -\nabla \cdot (\epsilon\, \nabla \phi) = \sum_i z_i F\, c_i,
+\end{equation}
+
+are $\mathcal{F}$, and
+the dimension of $\bm{u}=[ \bm{c}, \phi]^T$ is only the number of chemical species plus one (for potential), which is likely small. Evaluating $\mathcal{F}$ for a given $\bm{u}$ is not the leading cost in the PDE forward solve, so this kind of model reduction is unlikely to help us.
+
+\vspace{1em}
+\hrule
 \vspace{1em}
 
-I may explore using firedrake to create a Newton-CG solver. I can't seem to find any existing implementations of Newton-CG with the firedrake framework.
+I may explore using firedrake to create a Newton-CG solver that works with a simpler poisson system. I can't seem to find any existing implementations of Newton-CG with the firedrake framework.
 
 \end{document}
