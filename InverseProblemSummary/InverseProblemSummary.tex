@@ -216,30 +216,26 @@ systems,'' this doesn't seem promising for our non-simple PDE forward model.
 
 \paragraph{Non-linear model reduction} \quad \\
 
-The paper has a large section on model reduction.
-To my understanding, this is not very helpful for our problem. The intention is to take a system like 
-\begin{equation}
-    \frac{\partial \bm{u}}{\partial t} = \mathcal{F}(\bm{u})
-\end{equation}
-Where $\bm{u} \in \mathbb{R}^N$ is very high dimensional, and $\mathcal{F}:\mathbb{R}^N \to \mathbb{R}^N$ is very expensive to evaluate.
+This will take a lot more looking into to see if it might be worthwhile to use.
 
-And create a reduced order model for $\mathcal{F}$ that is cheaper to evaluate. Basically it tries to reduce away the high dimensionality of $\bm{u}$ by only selectively evaluating the most important equations of $\mathcal{F}$, but in our case, 
+I'm not sure how this would work with a weak formulation based forward method. To my understanding this involves spacially descritizing the PDE, ie going from
 
 \begin{equation}
-  \nabla \cdot \left( D_i \left[ \nabla c_i + \frac{z_i F}{RT}\, c_i\, \nabla \phi \right] \right),
+    \frac{\partial u}{\partial t} = \mathcal{F}(u)
 \end{equation}
-
+to
 \begin{equation}
-  -\nabla \cdot (\epsilon\, \nabla \phi) = \sum_i z_i F\, c_i,
+    \frac{d \bm{u}}{d t} = \bm{F}(\bm{u})
 \end{equation}
+by letting each row of $\bm{u}$ be the value of $u$ at a spacial gridpoint. We now have a system of ODEs which we can reduce by using a kind of spectral analysis to figure out a reduced order basis for this new system.\\
+This is something I would need to spend a lot more time looking into to see if it would be worthwhile to use. We might lose the advantages of the weak formulation by doing this spacial discretization.
 
-are $\mathcal{F}$, and
-the dimension of $\bm{u}=[ \bm{c}, \phi]^T$ is only the number of chemical species plus one (for potential), which is likely small. Evaluating $\mathcal{F}$ for a given $\bm{u}$ is not the leading cost in the PDE forward solve, so this kind of model reduction is unlikely to help us.
+
 
 \vspace{1em}
 \hrule
 \vspace{1em}
 
-I may explore using firedrake to create a Newton-CG solver that works with a simpler poisson system. I can't seem to find any existing implementations of Newton-CG with the firedrake framework.
+In the immidiate future I plan to explore using firedrake to create a Newton-CG solver that works with a simpler poisson system. I can't seem to find any existing implementations of Newton-CG with the firedrake framework.
 
 \end{document}
