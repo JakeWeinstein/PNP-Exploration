@@ -1,0 +1,72 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[all]{xy}
+
+\usepackage[colorlinks=true, urlcolor=blue, linkcolor=blue, citecolor=blue]{hyperref}
+
+\usepackage{amsmath,amsthm,amssymb,color,latexsym,esint}
+\newcommand{\justif}[2]{&{#1}&\text{#2}}
+\newcommand{\nat}{\mathsf{nat}}
+\usepackage{mathtools}
+\usepackage{geometry}
+\usepackage{tabularray}
+\usepackage{proof}
+\usepackage{mathpartir}
+\UseTblrLibrary{amsmath}
+\geometry{letterpaper}
+\usepackage{graphicx}
+\usepackage{tabto}
+\usepackage{tikz}
+\usetikzlibrary{automata, arrows.meta, positioning}
+\usepackage{bm}
+\usetikzlibrary{automata}
+\usepackage{setspace}
+\usepackage[shortlabels]{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,decorations.pathreplacing}
+
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}%
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}%
+\setlength{\parindent}{0pt}
+\makeatletter
+\let\oldabs\abs
+\def\abs{\@ifstar{\oldabs}{\oldabs*}}
+%
+\let\oldnorm\norm
+\def\norm{\@ifstar{\oldnorm}{\oldnorm*}}
+\makeatother
+
+
+\usepackage{xparse}% http://ctan.org/pkg/xparse
+\NewDocumentCommand{\ceil}{s O{} m}{%
+  \IfBooleanTF{#1} % starred
+    {\left\lceil#3\right\rceil} % \ceil*[..]{..}
+    {#2\lceil#3#2\rceil} % \ceil[..]{..}
+}
+
+
+\usepackage[noframe]{showframe}
+\usepackage{framed}
+
+
+
+% Sets up "environments" of formatted text.
+\renewenvironment{shaded}{%
+  \def\FrameCommand{\fboxsep=\FrameSep \colorbox{shadecolor}}%
+  \MakeFramed{\advance\hsize-\width \FrameRestore\FrameRestore}}%
+ {\endMakeFramed}
+\definecolor{shadecolor}{gray}{0.90}
+
+\newtheorem{problem}{Problem}
+
+\newenvironment{solution}[1][\textit{Solution:}]{\textbf{#1 } }
+
+% Sets spacing for the document
+\onehalfspacing
+
+\begin{document}
+    \paragraph{Quasi-Newton Optimization methods}\quad \\
+    All use an approximtion to the Hessian to get the step size and direction. \\
+    \textbf{BFGS} (Broyden-Fletcher-Goldfarb-Shanno)
+    
+\end{document}
